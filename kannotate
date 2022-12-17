@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ "$#" -eq 1 ];
+then
+  echo "kannotate"
+  echo "Usage: "
+  echo "kannotate <excluded_node> "
+  NODES=$(kubectl get nodes -o jsonpath='{.items[*].metadata.name}')
+  for instance in $NODES;
+    do
+      if [ $instance == $1 ];
+      then
+         echo "Skiping Node ";
+      else
+          echo "Annotating Nodes";
+          kubectl annotate node $instance cluster-autoscaler.kubernetes.io/scale-down-disabled=true;
+      fi
+  done
+fi
