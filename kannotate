@@ -2,6 +2,11 @@
 #k top nodes | cut -d ' ' -f18,2 mem
 #mem - remove last char : k top nodes | cut -d ' ' -f18,2 | sed 's/.\{2\}$//'
 #cpu - remove last char: k top nodes | cut -d ' ' -f4,2 | sed 's/.\{1\}$//'
+
+--
+kubectl get nodes -o jsonpath='{.items[*].status.allocatable.cpu}' | sed 's/.\{1\}$//'
+kubectl get nodes -o jsonpath='{.items[*].status.allocatable.memory}' | sed 's/.\{2\}$//'
+--
 #!/bin/bash
 
 if [ "$#" -eq 1 ];
