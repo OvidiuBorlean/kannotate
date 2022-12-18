@@ -1,4 +1,5 @@
-#k top nodes | cut -d ' ' -f4,2
+#k top nodes | cut -d ' ' -f4,2 cpu
+#k top nodes | cut -d ' ' -f18,2 mem
 #!/bin/bash
 
 if [ "$#" -eq 1 ];
