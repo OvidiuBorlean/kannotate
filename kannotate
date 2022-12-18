@@ -1,6 +1,7 @@
 #k top nodes | cut -d ' ' -f4,2 cpu
 #k top nodes | cut -d ' ' -f18,2 mem
 #mem - remove last char : k top nodes | cut -d ' ' -f18,2 | sed 's/.\{2\}$//'
+#cpu - remove last char: k top nodes | cut -d ' ' -f4,2 | sed 's/.\{1\}$//'
 #!/bin/bash
 
 if [ "$#" -eq 1 ];
