@@ -1,0 +1,16 @@
+#!/bin/bash
+SUM=0
+if [ "$#" -eq 1 ];
+then
+  echo "kannotate"
+  echo "Usage: "
+  echo "kannotate <excluded_node> "
+  PODS=$(kubectl get pod -A -o jsonpath='{.items[*].spec.containers[*].resources.requests.cpu}')
+  for items in $PODS;
+    do
+      newItem=$(echo $items | sed 's/.\{1\}$//');
+      echo $newItem;
+      let SUM=SUM+$newItem;
+  done
+  echo "Total", $SUM
+fi
