@@ -1,0 +1,37 @@
+#!/bin/bash
+SUM_CPU_REQ=0
+SUM_MEM_REQ=0
+SUM_LIM_CPU
+if [ "$#" -eq 0 ];
+then
+  echo "kannotate"
+  echo "Usage: "
+  echo "kannotate <excluded_node> "
+  REQ_CPU=$(kubectl get pod -A -o jsonpath='{.items[*].spec.containers[*].resources.requests.cpu}')
+  for items in $REQ_CPU;
+    do
+      newItem=$(echo $items | sed 's/.\{1\}$//');
+      echo $newItem;
+      let SUM_CPU_REQ=SUM_CPU_REQ+$newItem;
+  done
+  echo "Total CPU Request", $SUM_CPU_REQ
+  echo "Memory"
+  REQ_MEM=$(kubectl get pod -A -o jsonpath='{.items[*].spec.containers[*].resources.requests.memory}')
+  for mem_items in $REQ_MEM;
+    do
+      newmemItem=$(echo $mem_items | sed 's/.\{2\}$//');
+      echo $newmemItem;
+      let SUM_MEM_REQ=SUM_MEM_REQ+$newmemItem;
+  done
+  echo "Total Memory Request", $SUM_MEM_REQ
+  LIM_CPU=$(kubectl get pod -A -o jsonpath='{.items[*].spec.containers[*].resources.limits.cpu}')
+  for items in $LIM_CPU;
+    do
+      newItem=$(echo $items | sed 's/.\{1\}$//');
+      echo $newItem;
+      let SUM_LIM_CPU=SUM_LIM_CPU+$newItem;
+  done
+  echo "Total CPU Limits", $SUM_LIM_CPU
+
+
+fi
