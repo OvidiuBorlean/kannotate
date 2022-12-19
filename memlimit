@@ -1,0 +1,35 @@
+#!/bin/bash
+#SUM_CPU_REQ=0
+#SUM_MEM_REQ=0
+SUM_MEM_HIGH=0
+SUM_MEM_LOW=0
+SUM_TOT_LIM_MEM=0
+if [ "$#" -eq 0 ];
+then
+  LIM_MEM=$(kubectl get pod -A -o jsonpath='{.items[*].spec.containers[*].resources.limits.memory}')
+  for items in $LIM_MEM;
+    do
+      #echo $items
+      echo $items | grep M > /dev/null;
+      if [ $? -eq 0 ]
+         then
+            remove_m=$(echo $items | sed 's/.\{2\}$//');
+            #echo $remove_m;
+            #newItem=$(($remove*10));
+            SUM_MEM_LOW=$(($SUM_MEM_LOW+$remove_m))
+            echo "Total Low - $SUM_MEM_LOW"
+         elif [ $? -ne 0 ]
+         then
+          #echo $items;
+          remove_g=$(echo $items | sed 's/.\{2\}$//');
+          #echo $remove_g;
+          gb_to_mb=$(($remove_g*1000))
+          SUM_MEM_HIGH=$((SUM_MEM_HIGH+$gb_to_mb))
+          echo "Total High - $SUM_MEM_HIGH"
+      fi
+      let SUM_TOT_LIM_MEM=$(($SUM_MEM_HIGH+$SUM_MEM_LOW));
+  done
+  echo "Total Memory Limits - $SUM_TOT_LIM_MEM"
+
+
+fi
