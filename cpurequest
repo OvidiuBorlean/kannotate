@@ -1,0 +1,26 @@
+#!/bin/bash
+#SUM_CPU_REQ=0
+#SUM_MEM_REQ=0
+SUM_CPU_HIGH=0
+SUM_CPU_LOW=0
+SUM_TOT_LIM_CPU=0
+if [ "$#" -eq 0 ];
+then
+  LIM_CPU=$(kubectl get pod -A -o jsonpath='{.items[*].spec.containers[*].resources.requests.cpu}')
+  for items in $LIM_CPU;
+    do
+      echo $items | grep m > /dev/null;
+      if [ $? -ne 0 ]
+         then
+            newItem=$(($items*1000));
+            SUM_CPU_HIGH=$(($SUM_CPU_HIGH+$newItem))
+      else
+          remove_m=$(echo $items | sed 's/.\{1\}$//');
+          SUM_CPU_LOW=$((SUM_CPU_LOW+$remove_m))
+      fi
+      let SUM_TOT_LIM_CPU=$(($SUM_CPU_HIGH+$SUM_CPU_LOW));
+  done
+  echo "Total CPU Limits - $SUM_TOT_LIM_CPU"
+
+
+fi
