@@ -1,0 +1,111 @@
+#!/bin/bash
+#kubectl get pod -A --field-selector=spec.nodeName=aks-nodepool1-31408996-vmss000002 -o jsonpath='{.items[*].spec.containers[*].resources.requests.cpu}'
+function test() {
+   echo $1
+}
+
+function get_cpu_request() {
+SUM_CPU_HIGH=0
+SUM_CPU_LOW=0
+SUM_TOT_REQ_CPU=0
+REQ_CPU=$(kubectl get pod -A --field-selector=spec.nodeName=$1 -o jsonpath='{.items[*].spec.containers[*].resources.requests.cpu}')
+for items in $REQ_CPU;
+  do
+    echo $items | grep m > /dev/null;
+    if [ $? -ne 0 ]
+       then
+          newItem=$(($items*1000));
+          SUM_CPU_HIGH=$(($SUM_CPU_HIGH+$newItem))
+    else
+        remove_m=$(echo $items | sed 's/.\{1\}$//');
+        SUM_CPU_LOW=$((SUM_CPU_LOW+$remove_m))
+    fi
+    let SUM_TOT_REQ_CPU=$(($SUM_CPU_HIGH+$SUM_CPU_LOW));
+done
+echo "Total CPU Requests - $SUM_TOT_REQ_CPU"
+NODE_ALLOC=$(kubectl get nodes $1 -o jsonpath='{.status.allocatable.cpu}' | sed 's/.\{1\}$//')
+echo "Total Allocatable CPU Resources on this Node: $NODE_ALLOC"
+}
+
+function get_cpu_limit() {
+SUM_CPU_HIGH=0
+SUM_CPU_LOW=0
+SUM_TOT_LIM_CPU=0
+LIM_CPU=$(kubectl get pod -A --field-selector=spec.nodeName=$1 -o jsonpath='{.items[*].spec.containers[*].resources.limits.cpu}')
+for items in $LIM_CPU;
+  do
+    echo $items | grep m > /dev/null;
+    if [ $? -ne 0 ]
+       then
+          newItem=$(($items*1000));
+          SUM_CPU_HIGH=$(($SUM_CPU_HIGH+$newItem))
+    else
+        remove_m=$(echo $items | sed 's/.\{1\}$//');
+        SUM_CPU_LOW=$((SUM_CPU_LOW+$remove_m))
+    fi
+    let SUM_TOT_LIM_CPU=$(($SUM_CPU_HIGH+$SUM_CPU_LOW));
+done
+echo "Total CPU Limits - $SUM_TOT_LIM_CPU"
+}
+
+function get_mem_request() {
+SUM_MEM_HIGH=0
+SUM_MEM_LOW=0
+SUM_TOT_LIM_MEM=0
+LIM_MEM=$(kubectl get pod -A -o jsonpath='{.items[*].spec.containers[*].resources.requests.memory}')
+for items in $LIM_MEM;
+  do
+    echo $items | grep M > /dev/null;
+    if [ $? -eq 0 ]
+       then
+          remove_m=$(echo $items | sed 's/.\{2\}$//');
+          SUM_MEM_LOW=$(($SUM_MEM_LOW+$remove_m))
+          #echo "Total Low - $SUM_MEM_LOW"
+       elif [ $? -ne 0 ]
+       then
+        remove_g=$(echo $items | sed 's/.\{2\}$//');
+        gb_to_mb=$(($remove_g*1000))
+        SUM_MEM_HIGH=$((SUM_MEM_HIGH+$gb_to_mb))
+        #echo "Total High - $SUM_MEM_HIGH"
+    fi
+    let SUM_TOT_LIM_MEM=$(($SUM_MEM_HIGH+$SUM_MEM_LOW));
+done
+echo "Total Memory Limits - $SUM_TOT_LIM_MEM"
+NODE_ALLOC=$(kubectl get nodes $1 -o jsonpath='{.status.allocatable.memory}' | sed 's/.\{2\}$//')
+echo "Total Allocatable Memory Resources on this Node: $NODE_ALLOC"
+}
+
+function get_mem_limit() {
+SUM_CPU_HIGH=0
+SUM_CPU_LOW=0
+SUM_TOT_LIM_CPU=0
+LIM_CPU=$(kubectl get pod -A -o jsonpath='{.items[*].spec.containers[*].resources.limits.cpu}')
+for items in $LIM_CPU;
+  do
+    echo $items | grep m > /dev/null;
+    if [ $? -ne 0 ]
+       then
+          newItem=$(($items*1000));
+          SUM_CPU_HIGH=$(($SUM_CPU_HIGH+$newItem))
+    else
+        remove_m=$(echo $items | sed 's/.\{1\}$//');
+        SUM_CPU_LOW=$((SUM_CPU_LOW+$remove_m))
+    fi
+    let SUM_TOT_LIM_CPU=$(($SUM_CPU_HIGH+$SUM_CPU_LOW));
+done
+echo "Total CPU Limits - $SUM_TOT_LIM_CPU"
+}
+
+NODES=$(kubectl get nodes -o jsonpath='{.items[*].metadata.name}')
+for instance in $NODES;
+  do
+     echo "---> AKS Node Name - $instance";
+     get_cpu_request $instance
+ #   get_cpu_limit $instance
+     get_mem_request $instance
+     echo "-------------------"
+  done
+
+
+#echo $get_cpu_request
+#get_cpu_limit
